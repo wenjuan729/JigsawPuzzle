@@ -27,6 +27,7 @@ Index.prototype.imgSplit = function () {
     self.obj.imgOrigArr = [];
     self.dom.imgArea.html('');
     var cell = '';
+    //生成3*3的九宫格，根据background-position定位
     for (var i = 0; i < 3; i++) {
         for (var j = 0; j < 3; j++) {
             self.obj.imgOrigArr.push(i * 3 + j);
@@ -38,7 +39,7 @@ Index.prototype.imgSplit = function () {
                 'left': j * self.cell.cellWidth + 'px',
                 'top': i * self.cell.cellHeight + 'px',
                 'background': "url('" + self.img + "')",
-                'backgroundPosition': (-j) * self.cell.cellWidth + 'px ' + (-i) * self.cell.cellHeight + 'px',
+                'backgroundPosition': (-j) * self.cell.cellWidth + 'px ' + (-i) * self.cell.cellHeight + 'px',//每张背景图片的位置
             });
             self.dom.imgArea.append(cell);
         }
@@ -47,10 +48,10 @@ Index.prototype.imgSplit = function () {
 };
 Index.prototype.gameState = function () {
     var self = this;
-    self.dom.btnStart.bind('click', function () {
+    self.dom.btnStart.bind('click', function () {//绑定点击事件
         if (!self.hasStart) {
             $(this).text('复原');
-            self.hasStart = true;
+            self.hasStart = true;//定义锁
             self.randomArr();
             self.cellOrder(self.obj.imgRanArr);
             self.dom.imgCell.css({
@@ -59,12 +60,12 @@ Index.prototype.gameState = function () {
                 $(this).addClass('hover');
             }).bind('mouseout', function () {
                 $(this).removeClass('hover');
-            }).bind('mousedown', function (e) {
+            }).bind('mousedown', function (e) {//获取到最开始鼠标距离图片左顶点的距离
                 $(this).css('cursor', 'move');
                 var cellIndex1 = $(this).index();
                 var cellX = e.pageX - self.dom.imgCell.eq(cellIndex1).offset().left;
                 var cellY = e.pageY - self.dom.imgCell.eq(cellIndex1).offset().top;
-                $(document).bind('mousemove', function (e2) {
+                $(document).bind('mousemove', function (e2) {//获取图片移动到的位置
                     self.dom.imgCell.eq(cellIndex1).css({
                         'z-index': '40',
                         'left': (e2.pageX - cellX - self.dom.imgArea.offset().left) + 'px',
@@ -90,6 +91,7 @@ Index.prototype.gameState = function () {
         }
     })
 }
+//生成乱序的数据
 Index.prototype.randomArr = function () {
     this.obj.imgRanArr = [];
     var len = this.obj.imgOrigArr.length;
@@ -105,6 +107,7 @@ Index.prototype.randomArr = function () {
     }
     return;
 };
+//根据乱序数组进行乱序的图片渲染
 Index.prototype.cellOrder = function (arr) {
     var self = this;
     for (var i = 0; i < arr.length; i++) {
@@ -117,7 +120,7 @@ Index.prototype.cellOrder = function (arr) {
 Index.prototype.changeIndex = function (x, y, orig) {
     var self = this;
     if (x < 0 || x > self.obj.imgWidth || y < 0 || y > self.obj.imgHeight) {
-        return orig;
+        return orig;//如果图片被脱离到外面的区域，就回到原来的位置
     }
     var row = Math.floor(y / self.cell.cellHeight),
         col = Math.floor(x / self.cell.cellWidth),
@@ -128,6 +131,7 @@ Index.prototype.changeIndex = function (x, y, orig) {
     }
     return i;
 }
+//不符合条件，图片回到原来位置的函数
 Index.prototype.cellReturn = function (index) {
     var row = Math.floor(this.obj.imgRanArr[index] / 3),
         col = this.obj.imgRanArr[index] % 3;
@@ -138,13 +142,15 @@ Index.prototype.cellReturn = function (index) {
         $(this).css('z-index', '10');
     });
 }
+//两张图片交换位置
 Index.prototype.cellChange = function (from, to) {
     var self = this;
     var rowFrom = Math.floor(this.obj.imgRanArr[from] / 3),
         colFrom = this.obj.imgRanArr[from] % 3,
         rowTo = Math.floor(this.obj.imgRanArr[to] / 3),
         colTo = this.obj.imgRanArr[to] % 3,
-        temp = this.obj.imgRanArr[from];
+        temp = this.obj.imgRanArr[from];//记录原来图片的位置
+    //交换二者的位置
     this.dom.imgCell.eq(from).animate({
         'top': rowTo * this.cell.cellHeight + 'px',
         'left': colTo * this.cell.cellWidth + 'px',
@@ -158,11 +164,13 @@ Index.prototype.cellChange = function (from, to) {
         $(this).css('z-index', '10');
         self.obj.imgRanArr[from] = self.obj.imgRanArr[to];
         self.obj.imgRanArr[to] = temp;
+        //每次交换完位置就进行判断
         if (self.checkPass(self.obj.imgOrigArr, self.obj.imgRanArr)) {
             self.sucess();
         }
     })
 }
+//检查两组数组是不是一样，如果乱序和标准数组一样，就结束
 Index.prototype.checkPass = function (rightArr, puzzleArr) {
     if (rightArr.toString() == puzzleArr.toString()) {
         return true;
@@ -170,6 +178,7 @@ Index.prototype.checkPass = function (rightArr, puzzleArr) {
         return false;
     }
 };
+//游戏结束，解绑事件，弹出游戏成功
 Index.prototype.sucess = function () {
     for (var i = 0; i < this.obj.imgOrigArr.length; i++) {
         if (this.dom.imgCell.eq(i).has('hover')) {
